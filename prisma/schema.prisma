@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:Dimple@2005@localhost:5432/mydb"
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  role      String    @default("customer")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  vendors   Vendor[]  // ⭐ one user → many vendors
+}
+
+model Vendor {
+  id        Int        @id @default(autoincrement())
+  shopName  String
+  ownerId   Int
+  owner     User       @relation(fields: [ownerId], references: [id]) // ⭐ many vendors → one user
+  products  Product[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  stock       Int       @default(0)
+  vendorId    Int
+  vendor      Vendor    @relation(fields: [vendorId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
