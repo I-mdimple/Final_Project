@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = "postgresql://postgres:Dimple@2005@localhost:5432/mydb"
+  provider = "postgresql"
+  url      = "postgresql://postgres:Dimple@2005@localhost:5432/mydb"
 }
 
 model User {
@@ -17,6 +17,7 @@ model User {
   updatedAt DateTime  @updatedAt
 
   vendors   Vendor[]  // ⭐ one user → many vendors
+  @@map("User")
 }
 
 model Vendor {
@@ -27,6 +28,7 @@ model Vendor {
   products  Product[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+  @@map("Vendor")
 }
 
 model Product {
@@ -39,4 +41,5 @@ model Product {
   vendor      Vendor    @relation(fields: [vendorId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  @@map("Product")
 }
