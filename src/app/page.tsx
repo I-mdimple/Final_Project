@@ -19,7 +19,7 @@ export default function HomePage() {
 
             <div className="mt-8 flex gap-4">
               <Link 
-                href="/products" 
+                href="/shop/products" 
                 className="bg-yellow-300 text-black font-semibold px-6 py-3 rounded-lg hover:bg-yellow-400 transition"
               >
                 Start Shopping

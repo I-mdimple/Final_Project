@@ -1,3 +1,5 @@
+// Final_Project\src\app\api\chatbot\route.ts
+
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -15,7 +17,7 @@ export async function POST(request: Request) {
         let response = 'I\'m here to help! How can I assist you?';
         const lowerMessage = message.toLowerCase();
 
-        // AI responses based on keywords
+        // AI responses based on keywords (Your existing mock logic)
         if (lowerMessage.includes('product') || lowerMessage.includes('buy')) {
             response = 'We have a great selection of products! Visit our shop to browse through our latest offerings like laptops, headphones, keyboards, and more.';
         } else if (lowerMessage.includes('order') || lowerMessage.includes('tracking')) {
@@ -38,7 +40,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json(
             {
-                response,
+                response, // Key is 'response'
                 timestamp: new Date().toISOString(),
                 success: true
             },
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
             {
                 error: 'Failed to process message',
-                response: 'Sorry, there was an error processing your message. Please try again.',
+                response: 'Sorry, there was an error processing your message. Please try again.', // Still provide a 'response' field for safety
                 success: false
             },
             { status: 500 }
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
     }
 }
 
-// Also support GET for health check
+// Health check endpoint
 export async function GET() {
     return NextResponse.json(
         {
