@@ -29,7 +29,10 @@ export const authMiddleware = async (request: Request, allowedRoles: Role[] = []
     }
 
     // Attach user data to request (simulated for Next.js API Route handler)
-    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    // Parse the string ID back to a number
+    const user = await prisma.user.findUnique({ 
+      where: { id: parseInt(payload.userId) } 
+    });
     if (!user) {
         return new NextResponse(JSON.stringify({ error: 'User not found' }), { status: 404 });
     }

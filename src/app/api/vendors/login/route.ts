@@ -1,54 +1,61 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { generateToken } from '@/lib/auth'; // ⭐ IMPORT generateToken
 
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
-  try {
-    const { email, password } = await req.json();
+  try {
+    const { email, password } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
-    }
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: "Email and password are required" },
+        { status: 400 }
+      );
+    }
 
-    // find the user
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { vendors: true },
-    });
+    // Find the user and always include vendor info
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { vendor: true }, // Always include vendor
+    });
 
-    if (!user || user.role !== "vendor") {
-      return NextResponse.json(
-        { error: "Vendor account not found" },
-        { status: 400 }
-      );
-    }
+    // ⭐ MODIFICATION: Check for User Existence and Allowed Roles (VENDOR or ADMIN)
+    if (!user || (user.role !== Role.VENDOR && user.role !== Role.ADMIN)) {
+      return NextResponse.json(
+        { error: "Account not found or insufficient role" },
+        { status: 403 }
+      );
+    }
 
-    // compare password
-    const validPassword = await bcrypt.compare(password, user.password);
+    // compare password
+    const validPassword = await bcrypt.compare(password, user.password);
 
-    if (!validPassword) {
-      return NextResponse.json(
-        { error: "Invalid password" },
-        { status: 401 }
-      );
-    }
+    if (!validPassword) {
+      return NextResponse.json(
+        { error: "Invalid password" },
+        { status: 401 }
+      );
+    }
 
-    // everything correct
-    return NextResponse.json({
-      message: "Login successful",
-      vendorId: user.vendors[0]?.id || null,
-      userId: user.id,
-    });
-  } catch (error) {
-    console.error("Vendor Login Error:", error);
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
-  }
+    // Generate the JWT token
+    const token = generateToken(user.id.toString(), user.role);
+
+    // Include the role in the response so the frontend knows where to redirect
+    return NextResponse.json({
+      message: "Login successful",
+      token: token, 
+      role: user.role, // ⭐ Send role to frontend
+      vendorId: user.role === Role.VENDOR ? user.vendor[0]?.id || null : null,
+      userId: user.id,
+    });
+  } catch (error) {
+    console.error("Login Error:", error);
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
+  }
 }

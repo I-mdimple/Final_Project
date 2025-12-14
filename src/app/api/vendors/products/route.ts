@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const { userId } = authCheck;
 
   try {
-    const vendor = await prisma.vendor.findUnique({ where: { userId } });
+    const vendor = await prisma.vendor.findUnique({ where: { ownerId: parseInt(userId) } });
 
     if (!vendor || vendor.status !== VendorStatus.APPROVED) {
       return NextResponse.json({ error: 'Vendor not found or not approved' }, { status: 403 });
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required product fields' }, { status: 400 });
     }
 
-    const vendor = await prisma.vendor.findUnique({ where: { userId } });
+    const vendor = await prisma.vendor.findUnique({ where: { ownerId: parseInt(userId) } });
 
     if (!vendor || vendor.status !== VendorStatus.APPROVED) {
       return NextResponse.json({ error: 'Vendor not approved' }, { status: 403 });

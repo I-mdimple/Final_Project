@@ -1,63 +1,75 @@
-import { NextResponse } from 'next/server';
+// Final_Project\src\app\api\auth\login\route.ts
+import { PrismaClient, Role } from "@prisma/client";
+import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { generateToken } from '@/lib/auth'; 
 
-// Mock users
-const MOCK_USERS = [
-    {
-        id: 1,
-        email: 'customer@example.com',
-        password: 'password123',
-        role: 'customer',
-        name: 'John Customer',
-    },
-    {
-        id: 2,
-        email: 'vendor@example.com',
-        password: 'password123',
-        role: 'vendor',
-        name: 'Jane Vendor',
-    },
-    {
-        id: 3,
-        email: 'admin@example.com',
-        password: 'password123',
-        role: 'admin',
-        name: 'Admin User',
-    },
-];
+const prisma = new PrismaClient();
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
     try {
-        const { email, password } = await request.json();
+        const { email, password } = await req.json();
 
         if (!email || !password) {
             return NextResponse.json(
-                { error: 'Email and password required' },
+                { error: "Email and password are required" },
                 { status: 400 }
             );
         }
 
-        const user = MOCK_USERS.find(u => u.email === email && u.password === password);
+        // 1. Find the user in the database
+        // NOTE: We only include the vendor relation if the user role is VENDOR to optimize the query.
+        const user = await prisma.user.findUnique({
+            where: { email },
+            include: { vendor: true }, 
+        });
 
+        // ⭐ FIX 1: Check if user exists immediately after the query.
         if (!user) {
             return NextResponse.json(
-                { error: 'Invalid credentials' },
+                { error: "Invalid credentials: User not found" },
                 { status: 401 }
             );
         }
 
-        const { password: _, ...userData } = user;
+        // 2. Safely check roles. (Removed the faulty check from the previous version)
+        if (user.role !== Role.VENDOR && user.role !== Role.ADMIN) {
+            return NextResponse.json(
+                { error: "Insufficient role access" },
+                { status: 403 }
+            );
+        }
 
-        return NextResponse.json(
-            {
-                user: userData,
-                token: 'mock-jwt-token-' + Date.now(),
-            },
-            { status: 200 }
-        );
+        // 3. Compare password using bcrypt
+        const validPassword = await bcrypt.compare(password, user.password);
+
+        if (!validPassword) {
+            return NextResponse.json(
+                { error: "Invalid password" },
+                { status: 401 }
+            );
+        }
+
+        // 4. Generate the REAL JWT token
+        const token = generateToken(user.id.toString(), user.role);
+        
+        // 5. Safely determine vendorId for the response
+        const vendorId = user.role === Role.VENDOR && user.vendor
+            ? user.vendor.id
+            : null;
+
+        // 6. Return the token and role
+        return NextResponse.json({
+            message: "Login successful",
+            token: token, 
+            role: user.role, // For frontend redirection
+            vendorId: vendorId, // Safely determined vendor ID
+            userId: user.id,
+        });
     } catch (error) {
-        console.error('Login error:', error);
+        console.error("Login Error:", error);
         return NextResponse.json(
-            { error: 'Login failed' },
+            { error: "Something went wrong" },
             { status: 500 }
         );
     }
