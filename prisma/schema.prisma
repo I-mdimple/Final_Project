@@ -10,10 +10,9 @@ datasource db {
 enum Role {
   ADMIN
   VENDOR
-  CUSTOMER 
+  CUSTOMER
 }
 
-// ⭐ NEW: Vendor Status Enum
 enum VendorStatus {
   PENDING
   APPROVED
@@ -21,70 +20,66 @@ enum VendorStatus {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
-  email     String    @unique
+  email     String   @unique
   password  String
-  role      Role      @default(CUSTOMER) 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  role      Role     @default(CUSTOMER)
 
-  // ✅ FIX: One-to-one relationship to Vendor (User HAS ONE Vendor profile)
-  vendor    Vendor?   
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One user can have one vendor profile
+  vendor    Vendor?
+
   @@map("User")
 }
 
 model Vendor {
-  id          Int            @id @default(autoincrement())
-  shopName    String
-  
-  // ✅ FIX: ownerId made unique for 1:1 relationship
-  ownerId     Int            @unique 
-  // ✅ FIX: Relation field updated
-  user        User           @relation(fields: [ownerId], references: [id]) 
-  
-  // ✅ ADDED: Vendor Status
-  status      VendorStatus   @default(PENDING) 
-  
-  products    Product[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  
+  id        Int          @id @default(autoincrement())
+  shopName  String
+
+  ownerId   Int          @unique
+  user      User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  status    VendorStatus @default(PENDING)
+
+  products  Product[]
+
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
   @@map("Vendor")
 }
 
 model Product {
-  id          Int             @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   name        String
   description String?
   price       Float
-  stock       Int             @default(0)
-  
-  // ✅ ADDED: Required fields from API route
-  category    String          
-  isApproved  Boolean         @default(false) 
-  
-  vendorId    Int
-  vendor      Vendor          @relation(fields: [vendorId], references: [id])
-  
-  // ✅ ADDED: Relation to images
-  images      ProductImage[]  
+  stock       Int            @default(0)
 
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  
+  category    String
+  isApproved  Boolean        @default(false)
+
+  vendorId    Int
+  vendor      Vendor         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  images      ProductImage[]
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
   @@map("Product")
 }
 
-// ✅ ADDED: Required ProductImage model
 model ProductImage {
-  id          Int     @id @default(autoincrement())
-  productId   Int
-  url         String
-  isPrimary   Boolean @default(false)
+  id        Int     @id @default(autoincrement())
+  productId Int
+  url       String
+  isPrimary Boolean @default(false)
 
-  product     Product @relation(fields: [productId], references: [id])
-  
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@map("ProductImage")
 }

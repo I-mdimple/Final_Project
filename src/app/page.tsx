@@ -36,7 +36,7 @@ export default function HomePage() {
 
           <div className="hidden md:block">
             <Image
-              src="/hero-shopping.png"
+              src="/hero-img.png"
               alt="Shopping Illustration"
               width={500}
               height={500}
@@ -52,7 +52,7 @@ export default function HomePage() {
 
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[
-            { name: "Electronics", img: "/cat-electronics.jpg" },
+            { name: "Electronics", img: "/cat-shopping.jpg" },
             { name: "Fashion", img: "/cat-fashion.jpg" },
             { name: "Home & Decor", img: "/cat-home.jpg" },
             { name: "Beauty", img: "/cat-beauty.jpg" },

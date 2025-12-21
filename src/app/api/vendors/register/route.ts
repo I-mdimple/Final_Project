@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
@@ -29,12 +29,13 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // ✅ FIX: use Prisma enum, NOT string
     const newUser = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        role: "VENDOR",
+        role: Role.VENDOR,
       },
     });
 
@@ -46,7 +47,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(
-      { message: "Vendor registered successfully", vendor: newVendor },
+      {
+        message: "Vendor registered successfully",
+        vendor: newVendor,
+      },
       { status: 201 }
     );
   } catch (error) {
@@ -57,4 +61,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
 
